@@ -45,7 +45,13 @@ public class GameManager : MonoBehaviour
     private void ShowMessage(int stage)
     {
         switch (stage)
-        {            
+        {
+
+            case 0:
+                messageText.text = "END";
+                //Messages[0].gameObject.SetActive(true);
+
+                break;
             case 1:
                 messageText.text = "Roll the dices";
                 //Messages[0].gameObject.SetActive(true);

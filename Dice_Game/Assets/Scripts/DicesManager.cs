@@ -5,7 +5,8 @@ using UnityEngine;
 public class DicesManager : MonoBehaviour
 {
     bool needToGetResult = false;
-    public List<int> results, savedResults;
+    public List<int>  savedResults;
+    public int[] results;
 
     public List<GameObject> dices;
 
@@ -20,6 +21,11 @@ public class DicesManager : MonoBehaviour
     void Start()
     {
         SpawnDices();
+        results = new int[dices.Count];
+        for(int i = 0; i < results.Length; ++i)
+        {
+            results[i]=0;
+        }
         SelectAllDices();
     }
 
@@ -38,11 +44,12 @@ public class DicesManager : MonoBehaviour
                     Debug.Log("Checking stage 1..");
                     GetResult();
                     //sprawdzam rowniez ilosc wynikow w list result
-                    CheckNeedToGetResults(ref needToGetResult);
+                    needToGetResult=CheckNeedToGetResults();
+                    Debug.Log("Need to get result: " + needToGetResult);
                     if (!needToGetResult)
                     {
                         PlaceSelectedDicesOnBoard();
-                        SaveResults();
+                        //SaveResults();
                         gameManager.SetStage(3);
                         UnselectAllDices();
                         SetInteractableForAllDices(true);
@@ -58,21 +65,21 @@ public class DicesManager : MonoBehaviour
                     Debug.Log("Checking stage 3..");
                     GetResult();
                     //sprawdzam rowniez ilosc wynikow w list result
-                    CheckNeedToGetResults(ref needToGetResult);
+                    needToGetResult = CheckNeedToGetResults();
                     if (!needToGetResult)
                     {
                         PlaceSelectedDicesOnBoard();
-                        SaveResults();
+                        //SaveResults();
                         gameManager.SetStage(3);
                         UnselectAllDices();
                         SetInteractableForAllDices(true);
-
+                        ShowFinalResults();
                         //for test only
-                        for(int i = 0; i < savedResults.Count; i++)
+                        /*for(int i = 0; i < savedResults.Count; i++)
                         {
                             Debug.Log("Saved Results: " + savedResults[i]);
                         }
-                        
+                        */
                     }
                 }
                 break;
@@ -103,23 +110,17 @@ public class DicesManager : MonoBehaviour
     }
     public void RollDices()
     {
-        SetIsKineticForAllSelectedDices(false);
+        
         PlaceSelectedDicesAboveBoard();
-        AddForceToSelectedDices();
-        AddTorqueToSelectedDices();
+        SetIsKineticForAllSelectedDices(false);
+         AddForceToSelectedDices();
+          AddTorqueToSelectedDices();
         needToGetResult = true;
-        Debug.Log(needToGetResult);
+        Debug.Log("Need to get result: " + needToGetResult);
 
         if (gameManager.GetStage() == 3)
         {
-            for(int i = 0; i < dices.Count; i ++)
-            {
-                D6 diceScript = dices[i].GetComponent<D6>();
-                if (diceScript.IsSelected())
-                {
-                    savedResults.RemoveAt(i);
-                }
-            }
+            ResetResultForSelectedDices();
         }
     }
 
@@ -194,22 +195,27 @@ public class DicesManager : MonoBehaviour
 
     private void GetResult()
     {
-        foreach(GameObject dice in dices)
+        for(int i = 0; i < dices.Count; ++i)
         {
+            GameObject dice = dices[i];
+
             Rigidbody rigidbody = dice.GetComponent<Rigidbody>();
 
-            if (rigidbody.IsSleeping() && !rigidbody.isKinematic)
+            if (rigidbody.IsSleeping())
             {
                 D6 diceScript = dice.GetComponent<D6>();
                 Transform diceTransform = dice.GetComponent<Transform>();
-                int result=diceScript.GetResult(Vector3.up, 45f);
+                int result = diceScript.GetResult(Vector3.up, 45f);
 
-                results.Add(result);
+                if (results[i] <= 0)
+                {
+                    results[i] = result;
 
-                Debug.Log("RESULT is: "+ result);
-                rigidbody.isKinematic = true;
+                    Debug.Log("RESULT is: " + result);
+                    rigidbody.isKinematic = true;
+                }                
             }
-        }
+        }       
     }
 
     private void PlaceSelectedDicesOnBoard()
@@ -231,16 +237,16 @@ public class DicesManager : MonoBehaviour
 
                 transform.rotation = new Quaternion(0, 0, 0, 1);
 
-                diceScript.RotateToShowResult(results[res], diceSpawners[i].rotation);
+                diceScript.RotateToShowResult(results[i], diceSpawners[i].rotation);
                 res++;
             }       
                      
         }        
     }
 
-    private void CheckNeedToGetResults(ref bool needToGetResult)
+    private bool CheckNeedToGetResults()
     {
-        int count = 0;
+      /*  int count = 0;
         foreach(GameObject dice in dices)
         {
             D6 diceScript = dice.GetComponent<D6>();
@@ -248,10 +254,17 @@ public class DicesManager : MonoBehaviour
                 count++;
         }
 
-        Debug.Log("Result count: " + results.Count + " dices count: " + count);
+      //  Debug.Log("Result count: " + results.Count + " dices count: " + count);
 
-        if (results.Count == count && needToGetResult)
-            needToGetResult = false;
+        if (results.Count == dices.Count && needToGetResult)
+            needToGetResult = false;*/
+
+        for(int i = 0; i < results.Length; ++i)
+        {
+            if (results[i] <= 0)
+                return true;
+        }
+        return false;
     }
 
     //dev only - przenosze results do saveresults
@@ -261,7 +274,7 @@ public class DicesManager : MonoBehaviour
         {
             savedResults.Add(result);
         }
-        results.Clear();
+        //results.Clear();
     }
 
     private void SetInteractableForAllDices(bool var)
@@ -288,5 +301,23 @@ public class DicesManager : MonoBehaviour
             D6 diceScript = dice.GetComponent<D6>();
             diceScript.UnSelect();
         }
+    }
+
+    private void ResetResultForSelectedDices()
+    {
+        for(int i = 0; i < dices.Count; ++i)
+        {
+            GameObject dice = dices[i];
+            D6 diceScript = dice.GetComponent<D6>();
+            if (diceScript.IsSelected())
+            {
+                results[i] = 0;
+            }
+        }
+    }
+
+    private void ShowFinalResults()
+    {
+        Debug.Log("Final results: " + results[0] + "," + results[1] + "," + results[2] + "," + results[3] + "," + results[4]);
     }
 }
