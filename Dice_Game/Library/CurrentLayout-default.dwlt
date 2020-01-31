@@ -46,7 +46,7 @@ MonoBehaviour:
   m_MinSize: {x: 679, y: 322}
   m_MaxSize: {x: 12006, y: 8022}
   vertical: 1
-  controlID: 115
+  controlID: 91
 --- !u!114 &3
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -139,7 +139,7 @@ MonoBehaviour:
   m_MinSize: {x: 679, y: 322}
   m_MaxSize: {x: 12006, y: 8022}
   vertical: 0
-  controlID: 116
+  controlID: 92
 --- !u!114 &7
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -458,9 +458,9 @@ MonoBehaviour:
       speed: 2
       m_Value: 0
   m_Rotation:
-    m_Target: {x: -0.19472812, y: 0.74792886, z: -0.2493663, w: -0.58366036}
+    m_Target: {x: -0.13931811, y: 0.86032754, z: -0.36209497, w: -0.3308833}
     speed: 2
-    m_Value: {x: -0.1947126, y: 0.7478692, z: -0.2493464, w: -0.5836138}
+    m_Value: {x: -0.1393063, y: 0.86025465, z: -0.36206427, w: -0.33085525}
   m_Size:
     m_Target: 6.5514913
     speed: 2
@@ -519,8 +519,8 @@ MonoBehaviour:
   m_SceneHierarchy:
     m_TreeViewState:
       scrollPos: {x: 0, y: 0}
-      m_SelectedIDs: ec2f0000
-      m_LastClickedID: 12268
+      m_SelectedIDs: 4c300000
+      m_LastClickedID: 12364
       m_ExpandedIDs: 6efbffff
       m_RenameOverlay:
         m_UserAcceptedRename: 0
@@ -590,7 +590,7 @@ MonoBehaviour:
   m_LastFolders:
   - Assets/Scripts
   m_LastFoldersGridSize: 16
-  m_LastProjectPath: F:\Unity Projects\Dice_Game
+  m_LastProjectPath: F:\Unity Projects\Dice_Poker\Dice_Game
   m_LockTracker:
     m_IsLocked: 0
   m_FolderTreeState:
@@ -650,24 +650,24 @@ MonoBehaviour:
       m_Icon: {fileID: 0}
       m_ResourceFile: 
   m_ListAreaState:
-    m_SelectedInstanceIDs: 562b0000
-    m_LastClickedInstanceID: 11094
+    m_SelectedInstanceIDs: 60260000
+    m_LastClickedInstanceID: 9824
     m_HadKeyboardFocusLastEvent: 1
     m_ExpandedInstanceIDs: c623000000000000f2e4ffff763000004a300000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
-      m_Name: 
-      m_OriginalName: 
+      m_Name: DicesManipulator
+      m_OriginalName: DicesManipulator
       m_EditFieldRect:
         serializedVersion: 2
         x: 0
         y: 0
         width: 0
         height: 0
-      m_UserData: 0
+      m_UserData: 12636
       m_IsWaitingForDelay: 0
       m_IsRenaming: 0
-      m_OriginalEventType: 11
+      m_OriginalEventType: 0
       m_IsRenamingFilename: 1
       m_ClientGUIView: {fileID: 9}
     m_CreateAssetUtility:

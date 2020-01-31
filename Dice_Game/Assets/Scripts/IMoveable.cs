@@ -4,10 +4,12 @@ using UnityEngine;
 
 public interface IMoveable 
 {
-    void MoveVector(Vector3 vector3);
+
+    void Move(float x = 0f, float y = 0f, float z = 0f);
+    void Move(Vector3 vector3);
 
     void MoveTo(Vector3 vector3);
 
-    void MoveAboveObject(Vector3 vector3, Vector3 objectPosition);
+    void MoveFromObject(Vector3 vector3, Vector3 objectPosition);
 
 }
