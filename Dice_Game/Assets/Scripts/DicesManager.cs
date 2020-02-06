@@ -1,16 +1,23 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class DicesManager : MonoBehaviour
 {
     bool needToGetResult = false;
-    public List<int>  savedResults;
+    bool isPlayer;
+    bool enemyRoll = false;
+    bool getScore = true;
+    bool stage3Startup = true;
+
     public int[] results;
+    public int score;
+    public string handName;
 
     public List<GameObject> dices;
-
     public GameObject dicePrefab;
+
     public List<Transform> diceSpawners;
 
     public Transform board;
@@ -18,10 +25,23 @@ public class DicesManager : MonoBehaviour
     public GameManager gameManager;
 
     private DicesManipulator manipulator;
+    private ScoreCounter scoreCounter;
+    private EnemyAI enemyAI;
 
     private void Awake()
     {
         manipulator = gameObject.GetComponent<DicesManipulator>();
+        enemyAI = gameObject.GetComponent<EnemyAI>();
+        scoreCounter = gameObject.GetComponent<ScoreCounter>();
+
+        if (gameObject.name == "Player")
+            isPlayer = true;
+        else
+            isPlayer = false;
+
+        manipulator.isPlayer = this.isPlayer;
+
+        score = -1;
     }
 
     // Start is called before the first frame update
@@ -31,7 +51,8 @@ public class DicesManager : MonoBehaviour
 
         InitializeResultsTab();
 
-        SelectAllDices();
+        if(isPlayer)
+            SelectAllDices();
     }
 
     // Update is called once per frame
@@ -43,7 +64,7 @@ public class DicesManager : MonoBehaviour
             case 0:
                 break;
             case 1:
-                if (gameObject.name == "Player"
+                if (isPlayer
                     && needToGetResult)
                 {
                     Debug.Log("Checking stage 1..");
@@ -54,20 +75,56 @@ public class DicesManager : MonoBehaviour
                     if (!needToGetResult)
                     {
                         manipulator.PlaceSelectedDicesOnBoardAndRotate(ref dices, results, diceSpawners);
-                        //SaveResults();
-                        gameManager.SetStage(3);
-                        UnselectAllDices();
-                        manipulator.SetInteractableForAllDices(ref dices, true);
+                        gameManager.SetStageAndChangeUIMessages(2);
+                        UnselectAllDices();                        
                     }
                 }
                 break;
             case 2:
+                if (!enemyRoll
+                    && !isPlayer)
+                {
+                    StartCoroutine(Wait());
+                    SelectAllDices();
+                    RollDices();
+                    //manipulator.SetIsKineticForSelectedDices(ref dices, true);
+                    enemyRoll = true;
+                }
+
+                //Debug.Log("Enemy's Turn: isPlayer: "+isPlayer+" needToGetResult: "+needToGetResult);
+
+                if (!isPlayer
+                    && needToGetResult)
+                {
+
+                    Debug.Log("Checking stage 2..");
+                    GetResult();
+                    //sprawdzam rowniez ilosc wynikow w list result
+                    needToGetResult = CheckNeedToGetResults();
+                    Debug.Log("Need to get ENEMY result: " + needToGetResult);
+                    if (!needToGetResult)
+                    {
+                        manipulator.PlaceSelectedDicesOnBoardAndRotate(ref dices, results, diceSpawners);
+                        gameManager.SetStageAndChangeUIMessages(3);
+                        UnselectAllDices();
+                        enemyRoll = false;
+                    }
+                }
                 break;
             case 3:
-                if (gameObject.name == "Player"
+                if (stage3Startup
+                    && isPlayer)
+                {
+                    Debug.Log("stage 3 startUp");
+                    manipulator.SetInteractableForAllDices(ref dices, true);
+                    stage3Startup=!stage3Startup;
+                }
+                //Debug.Log("players Reroll: isPlayer: " + isPlayer + " needToGetResult: " + needToGetResult);
+                if (isPlayer
                    && needToGetResult)
                 {
                     Debug.Log("Checking stage 3..");
+                    
                     GetResult();
                     //sprawdzam rowniez ilosc wynikow w list result
                     needToGetResult = CheckNeedToGetResults();
@@ -75,20 +132,102 @@ public class DicesManager : MonoBehaviour
                     {
                         manipulator.PlaceSelectedDicesOnBoardAndRotate(ref dices, results, diceSpawners);
                         //SaveResults();
-                        gameManager.SetStage(3);
+                        gameManager.SetStageAndChangeUIMessages(4);
                         UnselectAllDices();
-                        manipulator.SetInteractableForAllDices(ref dices, true);
+                        manipulator.SetInteractableForAllDices(ref dices, false);
                         ShowFinalResults();
+                        
                     }
                 }
                 break;
             case 4:
+               // Debug.Log("players Reroll: isPlayer: " + isPlayer + " enemyRoll: " + enemyRoll);
+                if (!isPlayer 
+                    && !enemyRoll)
+                {
+                    Debug.Log("Enemy is selecting dices");
+                    enemyAI.SelectRandomDices(ref dices);
+                    enemyRoll = true;
+
+                    manipulator.PlaceSelectedDicesFromObjectAndRandomRotate(ref dices, board.position);
+                    manipulator.SetIsKineticForSelectedDices(ref dices, false);
+                    manipulator.AddForceToSelectedDices(ref dices, 15f);
+                    manipulator.AddRandomTorqueToSelectedDices(ref dices);
+
+                    needToGetResult = true;
+                    Debug.Log("Need to get result: " + needToGetResult);
+
+                    if (gameManager.GetStage() == 3 || gameManager.GetStage() == 4)
+                        ResetResultForSelectedDices();
+                    //RollDices();
+                }
+                Debug.Log("players Reroll: isPlayer: " + isPlayer + " needToGetResult: " + needToGetResult);
+                if (!isPlayer
+                    && needToGetResult)
+                {
+
+                    Debug.Log("Checking stage 4..");
+                    GetResult();
+                    //sprawdzam rowniez ilosc wynikow w list result
+                    needToGetResult = CheckNeedToGetResults();
+                    Debug.Log("Need to get ENEMY result: " + needToGetResult);
+                    if (!needToGetResult)
+                    {
+                        manipulator.PlaceSelectedDicesOnBoardAndRotate(ref dices, results, diceSpawners);
+                        gameManager.SetStageAndChangeUIMessages(5);
+                        UnselectAllDices();
+                        enemyRoll = false;
+                    }
+                }
                 break;
             case 5:
+                if (getScore)
+                {
+                    score = scoreCounter.CountScore(results);
+                    handName = scoreCounter.GetHandName(score);
+                    
+                    if (isPlayer)
+                    {
+                        Debug.Log("PLAYER Score: " + score + " Hand name: " + handName);
+                        gameManager.playerScore = score;
+                        gameManager.playerHand = handName;
+                    }
+                    else
+                    {
+                        Debug.Log("Enemy Score: " + score + " Hand name: " + handName);
+                        gameManager.enemyScore = score;
+                        gameManager.enemyHand = handName;
+                    }                    
+                    if (score > -1)
+                    {
+                        getScore = false;
+                    }                        
+                }                
                 break;
             default:
                 break;
         }            
+    }
+
+    public void Reset()
+    {
+        needToGetResult = false;
+        enemyRoll = false;
+        getScore = true;
+        stage3Startup = true;
+
+        score = -1;
+        handName = "";
+
+        ResetResultForAllDices();
+
+        if (isPlayer)
+            SelectAllDices();
+    }
+
+    private IEnumerator Wait()
+    {
+        yield return new WaitForSeconds(5);
     }
 
     //On roll button click
@@ -102,7 +241,7 @@ public class DicesManager : MonoBehaviour
         needToGetResult = true;
         Debug.Log("Need to get result: " + needToGetResult);
 
-        if (gameManager.GetStage() == 3)
+        if (gameManager.GetStage() == 3 || gameManager.GetStage() == 4)
             ResetResultForSelectedDices();
     }
 
@@ -160,6 +299,16 @@ public class DicesManager : MonoBehaviour
             {
                 results[i] = 0;
             }
+        }
+    }
+
+    private void ResetResultForAllDices()
+    {
+        for (int i = 0; i < dices.Count; ++i)
+        {
+            GameObject dice = dices[i];
+            D6 diceScript = dice.GetComponent<D6>();
+                results[i] = 0;
         }
     }
     private void GetResult()

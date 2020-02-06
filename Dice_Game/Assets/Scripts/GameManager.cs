@@ -6,7 +6,25 @@ using UnityEngine.UI;
 public class GameManager : MonoBehaviour
 {
     public GameObject resultPanel;
+
     public Text messageText;
+    public Text resultText;
+    public Text playerHandNameText;
+    public Text enemyHandNameText;
+    public Text playerRoundScoreText;
+    public Text enemyRoundScoreText;
+
+    public Button playAgainButton;
+    public Text playAgainButtonText;
+
+    public DicesManager player, enemy;
+    
+    public GameScoreCounter gameScoreCounter;
+    ScoreCounter scoreCounter;
+    UIManager uiManager;
+
+    public int playerScore, enemyScore;
+    public string playerHand, enemyHand;
 
 
 
@@ -15,59 +33,84 @@ public class GameManager : MonoBehaviour
 
     private void Awake()
     {
-        resultPanel.SetActive(false);
-        SetStage(1);
-    }
+        playerScore = -1;
+        enemyScore = -1;
 
-    // Start is called before the first frame update
-    void Start()
-    {
-        
+        scoreCounter = gameObject.GetComponent<ScoreCounter>();
+        uiManager = gameObject.GetComponent<UIManager>();
+
+        resultPanel.SetActive(false);
+
+        SetStageAndChangeUIMessages(1);
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+        if (stage == 5 && playerScore > -1 && enemyScore > -1)
+        {
+            Debug.Log("Stage 6");
+            Debug.Log("GM - Player score: " + playerScore + " Enemy score: " + enemyScore);
+
+            if (scoreCounter.CheckPlayerRoundWin(playerScore, enemyScore))
+                gameScoreCounter.IncreasePlayerRoundsWon();
+            else
+                gameScoreCounter.IncreaseEnemyRoundsWon();
+
+            if (!gameScoreCounter.CheckEndOfGame())
+            {
+                SetStageAndChangeUIMessages(6);                
+            }
+            else
+            {
+                SetStageAndChangeUIMessages(7);           
+                uiManager.ChangePlayAgainButtonActionAndText(RestartGame,"Next game");
+            }
+
+            uiManager.SetRoundScore(playerScore, enemyScore);
+            gameScoreCounter.IncreaseRoundNumber();    
+        }
+                   
     }
 
-    public void SetStage(int stage)
+    private void Reset()
+    {
+        playerScore = -1;
+        enemyScore = -1;
+
+        playerHand = "";
+        enemyHand = "";
+
+        resultPanel.SetActive(false);      
+    }
+
+    public void SetStageAndChangeUIMessages(int stage)
     {
         this.stage = stage;
-        ShowMessage(stage);
+        uiManager.ShowMessage(stage);
     }
 
     public int GetStage()
     {
         return stage;
-    }
+    } 
+    
 
-    private void ShowMessage(int stage)
+    public void NextRound()
     {
-        switch (stage)
-        {
-
-            case 0:
-                messageText.text = "END";
-                //Messages[0].gameObject.SetActive(true);
-
-                break;
-            case 1:
-                messageText.text = "Roll the dices";
-                //Messages[0].gameObject.SetActive(true);
-
-                break;
-            case 2:
-                messageText.text = "Enemy's turn";
-                // Messages[2].SetActive(true);
-
-                break;
-            case 3:
-                messageText.text = "Select dices you want to reroll";
-                /// Messages[1].SetActive(true);
-
-                break;
-        }
+        player.Reset();
+        enemy.Reset();
+        Reset();
+        SetStageAndChangeUIMessages(1);
     }
+    public void RestartGame()
+    {
+        gameScoreCounter.RestartGameScore();
+        player.Reset();
+        enemy.Reset();
+        Reset();
 
+        SetStageAndChangeUIMessages(1);
+        uiManager.ChangePlayAgainButtonActionAndText(NextRound, "Next round");
+    }
 }
